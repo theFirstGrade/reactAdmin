@@ -9,39 +9,34 @@ import {
     message
 } from 'antd'
 import LinkButton from "../../components/link-button";
+import {reqProducts} from '../../api/index'
+import {productList} from '../../config/productList'
+import {PAGE_SIZE} from "../../utils/constants";
 
 const Option = Select.Option
 
 export default class ProductHome extends Component {
 
     state = {
-        product: [
-            {
-                "status": 1,
-                "imgs": [],
-                "_id": "abcdefghijklmnopqrst",
-                "name": "神舟笔记本",
-                "desc": "这是最新款的神舟笔记本，搭载了。。。。。。",
-                "price": 999,
-                "pCategoryId": "asd",
-                "categoryId": "asa",
-                "detail": "..",
-                "_v": 0
-            },
-            {
-                "status": 1,
-                "imgs": [],
-                "_id": "abcdefghijklmnopqrst1",
-                "name": "神舟笔记本",
-                "desc": "这是最新款的神舟笔记本，搭载了。。。。。。",
-                "price": 1000,
-                "pCategoryId": "asd",
-                "categoryId": "asa",
-                "detail": "..",
-                "_v": 0
-            }
-        ],
+        total: 0,
+        product: productList,
+        loading: false
+    }
 
+    getProducts = async (pageNum) => {
+        this.setState({loading: true})
+        const result = await reqProducts(pageNum, 3)
+        this.setState({loading: false})
+        if (result.status === 0) {
+            const {total, list} = result.data
+            this.setState({
+                total: productList.length,
+            })
+        }
+    }
+
+    componentDidMount() {
+        this.getProducts(1)
     }
 
     /**
@@ -95,7 +90,7 @@ export default class ProductHome extends Component {
     }
 
     render() {
-        const {product} = this.state
+        const {product, total, loading} = this.state
         const title = (
             <span>
         <Select
@@ -126,7 +121,14 @@ export default class ProductHome extends Component {
         return (
             <div>
                 <Card title={title} extra={extra}>
-                    <Table rowKey='_id' dataSource={product} columns={this.columns} bordered/>
+                    <Table rowKey='_id' dataSource={product} columns={this.columns} bordered loading={loading}
+                           pagination={{
+                               total,
+                               defaultPageSize: PAGE_SIZE,
+                               showQuickJumper: true,
+                               onChange: this.getProducts
+                           }}
+                    />
                 </Card>
             </div>
         );
