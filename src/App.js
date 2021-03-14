@@ -1,12 +1,20 @@
-import './App.css';
-import {Button} from 'antd';
-import {} from 'react-router-dom'
-function App() {
-  return (
-    <div>
-      <Button type="primary">Primary Button</Button>
-    </div>
-  );
-}
+import {Button} from 'antd'
+import {BrowserRouter, Redirect, Route, Switch} from 'react-router-dom'
+import * as React from "react"
+import Login from './pages/login/login'
+import Admin from './pages/admin/admin'
 
-export default App;
+export default class App extends React.Component {
+
+
+    render() {
+        return (
+            <BrowserRouter>
+                <Switch>
+                    <Route path='/login' component={Login}/>
+                    <Route path='/' component={Admin}/>
+                </Switch>
+            </BrowserRouter>
+        );
+    }
+}
