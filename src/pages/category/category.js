@@ -263,7 +263,7 @@ export default class Category extends Component {
                     loading={loading}
                     dataSource={parentId === '0' ? categorys : subCategorys}
                     columns={this.columns}
-                    pagination={{defaultPageSize: 5, showQuickJumper: true}}
+                    pagination={{defaultPageSize: 10, showQuickJumper: true}}
                 />
 
                 <Modal

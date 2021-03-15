@@ -9,8 +9,9 @@ import {
     message
 } from 'antd'
 import LinkButton from "../../components/link-button";
-import {reqProducts} from '../../api/index'
+import {reqProducts, reqSearchProducts, reqUpdateStatus} from '../../api/index'
 import {productList} from '../../config/productList'
+import {productList2} from '../../config/productList2'
 import {PAGE_SIZE} from "../../utils/constants";
 
 const Option = Select.Option
@@ -20,17 +21,45 @@ export default class ProductHome extends Component {
     state = {
         total: 0,
         product: productList,
-        loading: false
+        loading: false,
+        searchName: '',
+        searchType: 'productName'
+    }
+
+    /**
+     * 更新指定商品的状态
+     */
+    updateStatus = (productId, status) => {
+        // 因为接口没数据，所以自己写一个productList来假装status更新了
+        message.success('更新商品成功')
+        this.setState({product: productList2})
+        this.getProducts(this.pageNum)
+
+        const result = reqUpdateStatus(productId, status)
+        if (result.status === 0) {
+            message.success('更新商品成功')
+            this.getProducts()
+        }
     }
 
     getProducts = async (pageNum) => {
+        this.pageNum = pageNum
         this.setState({loading: true})
-        const result = await reqProducts(pageNum, 3)
+        const {searchName, searchType} = this.state
+        let result
+        if (searchName) {
+            result = await reqSearchProducts({pageNum, PAGE_SIZE, searchName, searchType})
+        } else {
+            result = await reqProducts(pageNum, PAGE_SIZE)
+        }
         this.setState({loading: false})
+
+        // 假装获取到了数据，实际上没有
         if (result.status === 0) {
             const {total, list} = result.data
             this.setState({
                 total: productList.length,
+                // product: list
             })
         }
     }
@@ -61,11 +90,14 @@ export default class ProductHome extends Component {
                 width: 100,
                 title: '状态',
                 dataIndex: 'status',
-                render: (status) => {
+                render: (product) => {
+                    const {status, _id} = product
+                    const newStatus = status === 1 ? 2 : 1
                     return (
                         <span>
-                            <Button type='primary'>下架</Button>
-                            <span>在售</span>
+                            <Button type='primary'
+                                    onClick={() => this.updateStatus(_id, newStatus)}>{status === 1 ? '下架' : '上架'}</Button>
+                            <span>{status === 1 ? '在售' : '已下架'}</span>
                         </span>
                     )
                 }
@@ -76,7 +108,8 @@ export default class ProductHome extends Component {
                 render: (product) => {
                     return (
                         <span>
-                            <LinkButton>详情</LinkButton>
+                            <LinkButton
+                                onClick={() => this.props.history.push('/product/detail', {product})}>详情</LinkButton>
                             <LinkButton>修改</LinkButton>
                         </span>
                     )
@@ -90,11 +123,11 @@ export default class ProductHome extends Component {
     }
 
     render() {
-        const {product, total, loading} = this.state
+        const {product, total, loading, searchType} = this.state
         const title = (
             <span>
         <Select
-            defaultValue='按名称搜索'
+            value={searchType}
             style={{width: 150}}
             onChange={value => this.setState({searchType: value})}
         >
@@ -106,7 +139,7 @@ export default class ProductHome extends Component {
             style={{width: 150, margin: '0 15px'}}
             onChange={event => this.setState({searchName: event.target.value})}
         />
-        <Button type='primary'>搜索</Button>
+        <Button type='primary' onClick={() => this.getProducts(1)}>搜索</Button>
       </span>
         )
 
